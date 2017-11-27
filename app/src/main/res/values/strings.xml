@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">DeeNews</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="descriptionText">By default, a Binding class will be generated based on the name of the layout file, converting it to Pascal case and suffixing “Binding” to it. The above layout file was activity_main.xml so the generate class was ActivityMainBinding
+
+If your xml name is main_activity.xml than DataBinding class name will be MainActivityBinding.
+
+Take note that data binding is enabled in the build.gradle file.
+The tutorial will be updated to mention this explicitly.</string>
+</resources>
