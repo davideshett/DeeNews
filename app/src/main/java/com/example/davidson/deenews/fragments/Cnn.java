@@ -33,7 +33,7 @@ import retrofit2.Response;
 public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
         SearchView.OnQueryTextListener{
 
-    private final static String apiKey = ""; //your api key
+    private final static String apiKey = "55b6231237754905a6a50609c3db2b0f";
     List<News> news;
     String source = "cnn";
     String sortBy = "top";
@@ -55,6 +55,7 @@ public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListene
         swipeRefreshLayout = view.findViewById(R.id.swipe_view);
         swipeRefreshLayout.setOnRefreshListener(this);
 
+
          return view;
     }
 
@@ -71,35 +72,27 @@ public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListene
 
     private void loadCnnNews(){
 
-        if (apiKey.isEmpty()){
-            Toast.makeText(getContext(),"Obtain apikey from newsapi.org",Toast.LENGTH_LONG).show();
-        } else{
+        ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
 
-            ApiInterface apiService =
-                    ApiClient.getClient().create(ApiInterface.class);
+        Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
+        call.enqueue(new Callback<NewsResponse>() {
+            @Override
+            public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
 
-            Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
-            call.enqueue(new Callback<NewsResponse>() {
-                @Override
-                public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
-                    swipeRefreshLayout.setRefreshing(false);
-                    news = response.body().getArticles();
-                    recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                    recyclerView.setHasFixedSize(true);
-                    mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
-                    recyclerView.setAdapter(mAdapter);
-                }
+                news = response.body().getArticles();
+                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+                recyclerView.setHasFixedSize(true);
+                recyclerView.setAdapter(new RecyclerAdapter(news,recyclerView.getContext()));
+                swipeRefreshLayout.setRefreshing(false);
+            }
 
-                @Override
-                public void onFailure(Call<NewsResponse> call, Throwable t) {
-                    Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
+            @Override
+            public void onFailure(Call<NewsResponse> call, Throwable t) {
+                Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
 
-                }
-            });
-
-        }
-
-
+            }
+        });
     }
 
     @Override
