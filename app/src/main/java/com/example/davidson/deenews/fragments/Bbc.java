@@ -56,10 +56,7 @@ public class Bbc extends Fragment implements SearchView.OnQueryTextListener,
 
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        if (apiKey.isEmpty()){
-            Toast.makeText(getContext(),"Obtain apikey from newsapi.org",Toast.LENGTH_LONG).show();
 
-        }
 
 
         return view;
@@ -77,29 +74,35 @@ public class Bbc extends Fragment implements SearchView.OnQueryTextListener,
 
     private void loadBbcNews(){
 
+        if (apiKey.isEmpty()){
+            Toast.makeText(getContext(),"Obtain apikey from newsapi.org",Toast.LENGTH_LONG).show();
+        } else{
+
+            ApiInterface apiService =
+                    ApiClient.getClient().create(ApiInterface.class);
+
+            Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
+            call.enqueue(new Callback<NewsResponse>() {
+                @Override
+                public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
+                    swipeRefreshLayout.setRefreshing(false);
+                    news = response.body().getArticles();
+                    recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+                    recyclerView.setHasFixedSize(true);
+                    mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
+                    recyclerView.setAdapter(mAdapter);
+                }
+
+                @Override
+                public void onFailure(Call<NewsResponse> call, Throwable t) {
+                    Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
+
+                }
+            });
+
+        }
 
 
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-
-        Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
-        call.enqueue(new Callback<NewsResponse>() {
-            @Override
-            public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
-                swipeRefreshLayout.setRefreshing(false);
-                news = response.body().getArticles();
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                recyclerView.setHasFixedSize(true);
-                mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
-                recyclerView.setAdapter(mAdapter);
-            }
-
-            @Override
-            public void onFailure(Call<NewsResponse> call, Throwable t) {
-                Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
-
-            }
-        });
     }
 
 

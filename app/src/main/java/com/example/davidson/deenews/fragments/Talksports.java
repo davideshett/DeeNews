@@ -67,11 +67,6 @@ public class Talksports extends Fragment implements SearchView.OnQueryTextListen
         swipeRefreshLayout.setOnRefreshListener(this);
 
 
-        if (apiKey.isEmpty()){
-            Toast.makeText(getContext(),"Obtain apikey from newsapi.org",Toast.LENGTH_LONG).show();
-
-        }
-
          return view;
     }
 
@@ -87,27 +82,35 @@ public class Talksports extends Fragment implements SearchView.OnQueryTextListen
 
     private void loadTalkSports(){
 
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
+        if (apiKey.isEmpty()){
+            Toast.makeText(getContext(),"Obtain apikey from newsapi.org",Toast.LENGTH_LONG).show();
+        } else{
 
-        Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
-        call.enqueue(new Callback<NewsResponse>() {
-            @Override
-            public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
-                news = response.body().getArticles();
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                recyclerView.setHasFixedSize(true);
-                mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
-                recyclerView.setAdapter(mAdapter);
-                 swipeRefreshLayout.setRefreshing(false);
-            }
+            ApiInterface apiService =
+                    ApiClient.getClient().create(ApiInterface.class);
 
-            @Override
-            public void onFailure(Call<NewsResponse> call, Throwable t) {
+            Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
+            call.enqueue(new Callback<NewsResponse>() {
+                @Override
+                public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
+                    swipeRefreshLayout.setRefreshing(false);
+                    news = response.body().getArticles();
+                    recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+                    recyclerView.setHasFixedSize(true);
+                    mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
+                    recyclerView.setAdapter(mAdapter);
+                }
 
-                Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
-            }
-        });
+                @Override
+                public void onFailure(Call<NewsResponse> call, Throwable t) {
+                    Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
+
+                }
+            });
+
+        }
+
+
     }
 
 
