@@ -1,8 +1,20 @@
 package com.example.davidson.deenews.model;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.SerializedName;
 
+@Entity(tableName = News.TABLE_NAME)
 public class News {
+
+    public static final String TABLE_NAME = "news";
+
+    private String source;
+
+    @PrimaryKey(autoGenerate = true)
+    public int id;
+
     @SerializedName("author")
     private String author;
     @SerializedName("title")
@@ -71,5 +83,13 @@ public class News {
 
     public void setPublishedAt(String publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }
