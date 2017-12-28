@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.davidson.deenews.ApplicationController;
 import com.example.davidson.deenews.MainActivity;
 import com.example.davidson.deenews.R;
 import com.example.davidson.deenews.adapter.RecyclerAdapter;
@@ -30,6 +31,7 @@ import com.example.davidson.deenews.rest.ApiInterface;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -90,19 +92,49 @@ public class Talksports extends Fragment implements SearchView.OnQueryTextListen
             @Override
             public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
                 news = response.body().getArticles();
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                recyclerView.setHasFixedSize(true);
-                mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
-                recyclerView.setAdapter(mAdapter);
-                 swipeRefreshLayout.setRefreshing(false);
+                // save to db
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i =0; i <news.size();i++){
+                            News currentNewsItem = news.get(i);
+                            currentNewsItem.setSource("talksport");
+                            ApplicationController.provideDb().newsDao().insert(currentNewsItem);
+                        }
+                    }
+                });
+                setupRecyclerView();
             }
 
             @Override
             public void onFailure(Call<NewsResponse> call, Throwable t) {
 
                 Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
+
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        news = ApplicationController.provideDb().newsDao().getNews("talksport");
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                setupRecyclerView();
+                            }
+                        });
+
+                    }
+                });
+
             }
         });
+    }
+
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+        recyclerView.setHasFixedSize(true);
+        mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
+        recyclerView.setAdapter(mAdapter);
+        swipeRefreshLayout.setRefreshing(false);
     }
 
 

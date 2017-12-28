@@ -4,6 +4,7 @@ package com.example.davidson.deenews.fragments;
 
 import android.os.Bundle;
 
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,6 +17,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
+import com.example.davidson.deenews.ApplicationController;
 import com.example.davidson.deenews.R;
 import com.example.davidson.deenews.adapter.RecyclerAdapter;
 import com.example.davidson.deenews.model.News;
@@ -25,6 +28,8 @@ import com.example.davidson.deenews.rest.ApiInterface;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -81,21 +86,53 @@ public class Bbc extends Fragment implements SearchView.OnQueryTextListener,
         Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
         call.enqueue(new Callback<NewsResponse>() {
             @Override
-            public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
+            public void onResponse(@NonNull Call<NewsResponse> call, @NonNull Response<NewsResponse> response) {
                 swipeRefreshLayout.setRefreshing(false);
                 news = response.body().getArticles();
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                recyclerView.setHasFixedSize(true);
-                mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
-                recyclerView.setAdapter(mAdapter);
+
+                // save to db
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i =0; i <news.size();i++){
+                            News currentNewsItem = news.get(i);
+                            currentNewsItem.setSource("bbc-news");
+                            ApplicationController.provideDb().newsDao().insert(currentNewsItem);
+                        }
+                    }
+                });
+
+                setupRecyclerView();
             }
 
             @Override
             public void onFailure(Call<NewsResponse> call, Throwable t) {
                 Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
 
+                // try to use what is from the db
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        news = ApplicationController.provideDb().newsDao().getNews("bbc-news");
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                setupRecyclerView();
+                            }
+                        });
+
+                    }
+                });
+
             }
         });
+    }
+
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+        recyclerView.setHasFixedSize(true);
+        mAdapter = new RecyclerAdapter(news,recyclerView.getContext());
+        recyclerView.setAdapter(mAdapter);
     }
 
 

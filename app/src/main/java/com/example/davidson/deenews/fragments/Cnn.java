@@ -17,6 +17,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.example.davidson.deenews.ApplicationController;
 import com.example.davidson.deenews.R;
 import com.example.davidson.deenews.adapter.RecyclerAdapter;
 import com.example.davidson.deenews.model.News;
@@ -26,6 +28,8 @@ import com.example.davidson.deenews.rest.ApiInterface;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -81,18 +85,51 @@ public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListene
             public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
 
                 news = response.body().getArticles();
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-                recyclerView.setHasFixedSize(true);
-                recyclerView.setAdapter(new RecyclerAdapter(news,recyclerView.getContext()));
-                swipeRefreshLayout.setRefreshing(false);
+
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i =0; i <news.size();i++){
+                            News currentNewsItem = news.get(i);
+                            currentNewsItem.setSource("cnn");
+                            ApplicationController.provideDb().newsDao().insert(currentNewsItem);
+                        }
+                    }
+                });
+
+                setupRecyclerView();
+
+
+
             }
 
             @Override
             public void onFailure(Call<NewsResponse> call, Throwable t) {
                 Toast.makeText(getContext(),"unable to connect!!",Toast.LENGTH_LONG).show();
 
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        news = ApplicationController.provideDb().newsDao().getNews("cnn");
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                setupRecyclerView();
+                            }
+                        });
+
+                    }
+                });
+
             }
         });
+    }
+
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setAdapter(new RecyclerAdapter(news,recyclerView.getContext()));
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     @Override
