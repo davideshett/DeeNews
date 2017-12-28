@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.davidson.deenews.ApplicationController;
+import com.example.davidson.deenews.Constants;
 import com.example.davidson.deenews.R;
 import com.example.davidson.deenews.adapter.RecyclerAdapter;
 import com.example.davidson.deenews.model.News;
@@ -36,9 +37,6 @@ import retrofit2.Response;
 
 public class Bbc extends Fragment implements SearchView.OnQueryTextListener,
  SwipeRefreshLayout.OnRefreshListener{
-
-
-    private final static String apiKey = "55b6231237754905a6a50609c3db2b0f";
 
     String source = "bbc-news";
     List<News> news;
@@ -83,7 +81,7 @@ public class Bbc extends Fragment implements SearchView.OnQueryTextListener,
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
 
-        Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
+        Call<NewsResponse> call = apiService.getTopNews(source,sortBy, Constants.API_KEY);
         call.enqueue(new Callback<NewsResponse>() {
             @Override
             public void onResponse(@NonNull Call<NewsResponse> call, @NonNull Response<NewsResponse> response) {

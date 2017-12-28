@@ -19,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.davidson.deenews.ApplicationController;
+import com.example.davidson.deenews.Constants;
 import com.example.davidson.deenews.R;
 import com.example.davidson.deenews.adapter.RecyclerAdapter;
 import com.example.davidson.deenews.model.News;
@@ -37,7 +38,7 @@ import retrofit2.Response;
 public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
         SearchView.OnQueryTextListener{
 
-    private final static String apiKey = "55b6231237754905a6a50609c3db2b0f";
+
     List<News> news;
     String source = "cnn";
     String sortBy = "top";
@@ -79,7 +80,7 @@ public class Cnn extends Fragment implements SwipeRefreshLayout.OnRefreshListene
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
 
-        Call<NewsResponse> call = apiService.getTopNews(source,sortBy,apiKey);
+        Call<NewsResponse> call = apiService.getTopNews(source,sortBy, Constants.API_KEY);
         call.enqueue(new Callback<NewsResponse>() {
             @Override
             public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
